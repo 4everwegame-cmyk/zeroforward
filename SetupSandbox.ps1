@@ -1,7 +1,13 @@
 # =========================================================
 # ZFTN - ZERO FORWARD TRUTH NETWORK: MASTER CLEAN BUILD SCRIPT
 # Target: Auto-locate Project KISMET Unity Root
+# Optional override: .\SetupSandbox.ps1 -ProjectSearchRoot "D:\Projects"
 # =========================================================
+
+param(
+    [Parameter(HelpMessage = "Directory to search for the Unity project when the script is not run from the project root.")]
+    [string]$ProjectSearchRoot = $env:USERPROFILE
+)
 
 Write-Host "Locating Unity Project Root..." -ForegroundColor Cyan
 
@@ -12,7 +18,13 @@ $foundPath = $null
 if (Test-Path "Assets") {
     $foundPath = $PWD.Path
 } else {
-    $match = Get-ChildItem -Path "C:\Users\4ever" -Recurse -Filter $targetFolderName -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ([string]::IsNullOrWhiteSpace($ProjectSearchRoot) -or -not (Test-Path -LiteralPath $ProjectSearchRoot -PathType Container)) {
+        Write-Host "ERROR: ProjectSearchRoot is missing or is not an existing directory: $ProjectSearchRoot" -ForegroundColor Red
+        Write-Host "Run from the Unity project root or pass -ProjectSearchRoot with a valid directory." -ForegroundColor Yellow
+        exit 1
+    }
+
+    $match = Get-ChildItem -Path $ProjectSearchRoot -Directory -Recurse -Filter $targetFolderName -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($match) {
         $foundPath = $match.FullName
     }
