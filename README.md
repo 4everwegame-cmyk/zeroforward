@@ -27,6 +27,27 @@ A state is not implied by another state. A file existing does not mean it has be
 
 **Audit limitation:** this table describes evidence found in this repository at the audit snapshot; it does not claim that artifacts cannot exist elsewhere. GitHub code-scanning and collaborator details were inaccessible to the auditor because the connector returned 403, so those areas remain unverified.
 
+## Related repository inventory: `supremacy-engine`
+
+A separate **private** repository, [`4everwegame-cmyk/supremacy-engine`](https://github.com/4everwegame-cmyk/supremacy-engine), was inspected read-only on 2026-10-13. This is a separate repository, not part of the `zeroforward` tree.
+
+| Subsystem / claim | State | Evidence observed | Limits |
+|---|---|---|---|
+| Constitutional runtime | **Implemented** | `constitution/registry.py`, `supremacy/engine.py`, `compiler/governed.py`, `runtime/guards.py` | File presence only; behavior not yet verified |
+| Governance / multi-signature | **Implemented** | `governance/multi_sig.py` | File presence only; behavior not yet verified |
+| Audit component | **Implemented** | `common/audit.py` | Audit guarantees not yet verified |
+| Dashboard / capability orchestration | **Implemented** | `dashboard/visualizer.py`, `orchestrator/capability.py` | File presence only |
+| Adversarial test suite | **Implemented; not tested in this audit** | `tests/test_break_constitution.py`; README documents `python -m pytest tests/ -v` | No test run or passing result claimed |
+| CFTN integration | **Not evidenced in inspected scope** | Not found in inspected README and named files | Does not prove absence from all repos/branches |
+| Truth or Dare | **Not evidenced in inspected scope** | Not found in inspected README and named files | Does not prove absence from all repos/branches |
+| Cornerstone | **Not evidenced in inspected scope** | Not found in inspected README and named files | Does not prove absence from all repos/branches |
+
+The role of `supremacy-engine` as the authoritative ZFTN-VISION integration root remains **Unverified** pending a wider subsystem map and explicit interface contracts.
+
+### ZFT-104 remediation status
+
+The hardcoded `C:\\Users\\4ever` search root in `SetupSandbox.ps1` was removed from current `main` in commit [`76371eb728351d854f73e8a52c4018b6160eeb4d`](https://github.com/4everwegame-cmyk/zeroforward/commit/76371eb728351d854f73e8a52c4018b6160eeb4d). The script now accepts `-ProjectSearchRoot`, defaulting to `$env:USERPROFILE`, and checks that the directory exists. **Runtime test pending.** The commit does not remove the previous path from Git history.
+
 ## Linear audit trail
 
 These issues are the source of the current audit findings and follow-up work:
@@ -39,7 +60,7 @@ These issues are the source of the current audit findings and follow-up work:
 ## Immediate audit priorities
 
 1. Reclassify unsupported mission-document claims using the four empirical labels.
-2. Remove the hardcoded local profile path from `SetupSandbox.ps1`.
+2. Runtime-test the `SetupSandbox.ps1` HEAD remediation and separately assess whether historical Git objects require cleanup.
 3. Replace the `SupervisorGate` auto-approval stub with an explicit validation contract and tests that prove invalid messages are rejected.
 4. Add meaningful automated tests before marking behavior **Tested**.
 5. Record the specific criteria and evidence required for **Validated** and **Verified**.
