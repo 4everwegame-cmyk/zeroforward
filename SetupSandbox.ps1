@@ -30,14 +30,10 @@ if (Test-Path "Assets") {
     }
 }
 
-if (-not $foundPath -or -not (Test-Path "$foundPath\Assets")) {
-    Write-Host "ERROR: Could not find Unity project with an 'Assets' folder." -ForegroundColor Red
-    Write-Host "Please place and run this script inside your Unity project root." -ForegroundColor Yellow
+if (-not (Test-Path "Assets")) {
+    Write-Host "ERROR: 'Assets' folder not found. Run this from your Unity project root." -ForegroundColor Red
     exit
 }
-
-Set-Location $foundPath
-Write-Host "Project Root Confirmed: $foundPath" -ForegroundColor Green
 
 $baseDir = "Assets\Sandbox"
 $folders = @(
@@ -58,27 +54,16 @@ using System;
 namespace Sandbox.Core{
     [Serializable]
     public class Message {
-        public string Sender; 
-        public string Target; 
-        public string Intent; 
-        public string Payload;
-        public int Priority; 
-        public bool RequiresApproval;
-        
+        public string Sender; public string Target; public string Intent; public string Payload;
+        public int Priority; public bool RequiresApproval;
         public Message() { }
-        
         public Message(string sender, string target, string intent, string payload, int priority = 0, bool requiresApproval = false) {
-            Sender = sender; 
-            Target = target; 
-            Intent = intent; 
-            Payload = payload; 
-            Priority = priority; 
-            RequiresApproval = requiresApproval;
+            Sender = sender; Target = target; Intent = intent; Payload = payload; Priority = priority; RequiresApproval = requiresApproval;
         }
     }
 }
 "@
-Set-Content -Path "$baseDir\Core\Message.cs" -Value $messageCode -Encoding UTF8
+Set-Content -Path "$baseDir\Core\Message.cs" -Value $messageCode
 
 $supervisorGateCode = @"
 using Sandbox.Core;
@@ -96,7 +81,7 @@ namespace Sandbox.Core{
     }
 }
 "@
-Set-Content -Path "$baseDir\Core\SupervisorGate.cs" -Value $supervisorGateCode -Encoding UTF8
+Set-Content -Path "$baseDir\Core\SupervisorGate.cs" -Value $supervisorGateCode
 
 $agentBaseCode = @"
 using System;
@@ -111,7 +96,7 @@ namespace Sandbox.Agents{
     }
 }
 "@
-Set-Content -Path "$baseDir\Agents\AgentBase.cs" -Value $agentBaseCode -Encoding UTF8
+Set-Content -Path "$baseDir\Agents\AgentBase.cs" -Value $agentBaseCode
 
 # --- INDIVIDUAL AGENT GENERATION ---
 $agents = @(
@@ -144,10 +129,10 @@ namespace Sandbox.Agents{
     }
 }
 "@
-    Set-Content -Path "$baseDir\Agents\$name.cs" -Value $agentFileCode -Encoding UTF8
+    Set-Content -Path "$baseDir\Agents\$name.cs" -Value $agentFileCode
 }
 
-# --- REGISTRY ---
+# --- REGISTRY & HARDENED CONTROLLER ---
 $agentRegistryCode = @"
 using System.Collections.Generic;
 using Sandbox.Agents;
@@ -173,7 +158,7 @@ namespace Sandbox.Core{
     }
 }
 "@
-Set-Content -Path "$baseDir\Core\AgentRegistry.cs" -Value $agentRegistryCode -Encoding UTF8
+Set-Content -Path "$baseDir\Core\AgentRegistry.cs" -Value $agentRegistryCode
 
 $sandboxControllerCode = @"
 using System;
@@ -207,7 +192,6 @@ namespace Sandbox.Core
             }
 
             var agent = registry.Get(agentName);
-
             if (agent == null)
             {
                 return new Message("System", msg.Sender ?? "Unknown", "Error", "Agent not found: " + agentName);
@@ -216,7 +200,6 @@ namespace Sandbox.Core
             try
             {
                 var response = agent.Process(msg);
-
                 if (response == null)
                 {
                     return new Message(agent.AgentName, msg.Sender ?? "System", "Error", "Agent returned null response");
@@ -232,7 +215,7 @@ namespace Sandbox.Core
     }
 }
 "@
-Set-Content -Path "$baseDir\Core\SandboxController.cs" -Value $sandboxControllerCode -Encoding UTF8
+Set-Content -Path "$baseDir\Core\SandboxController.cs" -Value $sandboxControllerCode
 
 # --- BOOTSTRAP TEST FILE ---
 $bootstrapCode = @"
@@ -252,68 +235,52 @@ public class SandboxBootstrap : MonoBehaviour {
             "NHIAgent", "NonHumanAIAgent", "HumanIntentAgent"
         };
 
-        Debug.Log("\n========================================");
-        Debug.Log("ZFTN SANDBOX FOUNDATION: INITIALIZING");
-        Debug.Log("PROJECT KISMET - 30-Year Integration");
-        Debug.Log("========================================\n");
+        Debug.Log("--- ZFTN SANDBOX FOUNDATION: INITIALIZING AGENTS ---");
 
         foreach (var agentName in agentNames)
         {
-            var initialMessage = new Message(
-                "System", 
-                agentName, 
-                "BootstrapBuild", 
-                "Establish foundational cornerstone. Organize and synthesize 30-year project."
-            );
+            var initialMessage = new Message("User", agentName, "BootstrapBuild", "Establish foundational cornerstone.");
             var response = sandbox.SendToAgent(agentName, initialMessage);
 
-            Debug.Log(
-                "[" + response.Sender + "] -> [" + response.Target + "]\n" +
-                "  Intent: " + response.Intent + "\n" +
-                "  Result: " + response.Payload + "\n"
-            );
+            Debug.Log("[" + response.Sender + " -> " + response.Target + "] Intent: " + response.Intent + " | Payload: " + response.Payload);
         }
 
-        Debug.Log("\n========================================");
-        Debug.Log("ZFTN SANDBOX READY");
-        Debug.Log("All 9 agents active and coordinated");
-        Debug.Log("========================================\n");
+        Debug.Log("--- ZFTN SANDBOX COMPLETE: ALL AGENTS ACTIVE ---");
     }
 }
 "@
-Set-Content -Path "$baseDir\SandboxBootstrap.cs" -Value $bootstrapCode -Encoding UTF8
+Set-Content -Path "$baseDir\SandboxBootstrap.cs" -Value $bootstrapCode
 
 Write-Host "=========================================================" -ForegroundColor Cyan
-Write-Host " SUCCESS: ZFTN Sandbox Foundation Generated Successfully" -ForegroundColor Green
+Write-Host " SUCCESS: Hardened sandbox foundation deployed cleanly!    " -ForegroundColor Green
 Write-Host "=========================================================" -ForegroundColor Cyan
 Write-Host " " -ForegroundColor Cyan
-Write-Host " Generated Structure:" -ForegroundColor Yellow
-Write-Host " $baseDir/" -ForegroundColor White
-Write-Host "   ├── Core/" -ForegroundColor White
-Write-Host "   │   ├── Message.cs" -ForegroundColor White
-Write-Host "   │   ├── SupervisorGate.cs" -ForegroundColor White
-Write-Host "   │   ├── AgentRegistry.cs" -ForegroundColor White
-Write-Host "   │   └── SandboxController.cs" -ForegroundColor White
-Write-Host "   ├── Agents/" -ForegroundColor White
-Write-Host "   │   ├── AgentBase.cs" -ForegroundColor White
-Write-Host "   │   ├── PlannerAgent.cs" -ForegroundColor White
-Write-Host "   │   ├── CoderAgent.cs" -ForegroundColor White
-Write-Host "   │   ├── ArchitectAgent.cs" -ForegroundColor White
-Write-Host "   │   ├── CriticAgent.cs" -ForegroundColor White
-Write-Host "   │   ├── ArchivistAgent.cs" -ForegroundColor White
-Write-Host "   │   ├── ValidatorAgent.cs" -ForegroundColor White
-Write-Host "   │   ├── NHIAgent.cs" -ForegroundColor White
-Write-Host "   │   ├── NonHumanAIAgent.cs" -ForegroundColor White
-Write-Host "   │   └── HumanIntentAgent.cs" -ForegroundColor White
-Write-Host "   ├── Tests/" -ForegroundColor White
-Write-Host "   └── SandboxBootstrap.cs" -ForegroundColor White
+Write-Host " Generated Files:" -ForegroundColor Yellow
+Write-Host " Assets/Sandbox/Core/" -ForegroundColor White
+Write-Host "   - Message.cs" -ForegroundColor White
+Write-Host "   - SupervisorGate.cs" -ForegroundColor White
+Write-Host "   - AgentRegistry.cs" -ForegroundColor White
+Write-Host "   - SandboxController.cs" -ForegroundColor White
 Write-Host " " -ForegroundColor Cyan
-Write-Host " Next Steps:" -ForegroundColor Yellow
-Write-Host " 1. Open your Unity project" -ForegroundColor White
-Write-Host " 2. Wait for scripts to compile" -ForegroundColor White
-Write-Host " 3. Create a new scene" -ForegroundColor White
-Write-Host " 4. Add empty GameObject and attach SandboxBootstrap" -ForegroundColor White
-Write-Host " 5. Press Play and watch Console" -ForegroundColor White
+Write-Host " Assets/Sandbox/Agents/" -ForegroundColor White
+Write-Host "   - AgentBase.cs" -ForegroundColor White
+Write-Host "   - PlannerAgent.cs" -ForegroundColor White
+Write-Host "   - CoderAgent.cs" -ForegroundColor White
+Write-Host "   - ArchitectAgent.cs" -ForegroundColor White
+Write-Host "   - CriticAgent.cs" -ForegroundColor White
+Write-Host "   - ArchivistAgent.cs" -ForegroundColor White
+Write-Host "   - ValidatorAgent.cs" -ForegroundColor White
+Write-Host "   - NHIAgent.cs" -ForegroundColor White
+Write-Host "   - NonHumanAIAgent.cs" -ForegroundColor White
+Write-Host "   - HumanIntentAgent.cs" -ForegroundColor White
+Write-Host " " -ForegroundColor Cyan
+Write-Host " Assets/Sandbox/" -ForegroundColor White
+Write-Host "   - SandboxBootstrap.cs" -ForegroundColor White
+Write-Host " " -ForegroundColor Cyan
+Write-Host " Next:" -ForegroundColor Yellow
+Write-Host " 1. Open Unity and let scripts compile" -ForegroundColor White
+Write-Host " 2. Create empty GameObject" -ForegroundColor White
+Write-Host " 3. Attach SandboxBootstrap component" -ForegroundColor White
+Write-Host " 4. Hit Play and watch Console" -ForegroundColor White
 Write-Host " " -ForegroundColor Cyan
 Write-Host "=========================================================" -ForegroundColor Cyan
-Write-Host ""
