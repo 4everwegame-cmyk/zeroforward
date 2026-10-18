@@ -1,16 +1,15 @@
+using System;
 using System.Collections.Generic;
 using ZFTN.Agents;
 
 namespace ZFTN.Core
 {
-    public class AgentRegistry
+    public class AgentRegistry : IDisposable
     {
         private readonly Dictionary<string, AgentBase> _agents = new Dictionary<string, AgentBase>();
 
         public AgentRegistry()
         {
-            // Register agents and the intents they listen to.
-            // Agents subscribe to intents in their constructors.
             _agents["PlannerAgent"] = new PlannerAgent();
             _agents["CoderAgent"] = new CoderAgent();
             _agents["ArchitectAgent"] = new ArchitectAgent();
@@ -30,5 +29,18 @@ namespace ZFTN.Core
         }
 
         public IEnumerable<string> AgentNames => _agents.Keys;
+
+        public void Dispose()
+        {
+            foreach (var agent in _agents.Values)
+            {
+                if (agent != null)
+                {
+                    agent.Dispose();
+                }
+            }
+
+            _agents.Clear();
+        }
     }
 }
