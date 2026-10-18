@@ -1,16 +1,32 @@
 # =========================================================
-# ZFTN - ZERO FORWARD TRUTH NETWORK: FULLY HARDENED BUILD SCRIPT
-# Target: C:\Users\4ever\Documents\VisionAndSol
+# ZFTN - ZERO FORWARD TRUTH NETWORK: MASTER CLEAN BUILD SCRIPT
+# Target: Auto-locate Project KISMET Unity Root
+# Optional override: .\SetupSandbox.ps1 -ProjectSearchRoot "D:\Projects"
 # =========================================================
 
-$defaultUnityPath = "C:\Users\4ever\Documents\VisionAndSol"
+param(
+    [Parameter(HelpMessage = "Directory to search for the Unity project when the script is not run from the project root.")]
+    [string]$ProjectSearchRoot = $env:USERPROFILE
+)
 
-if ($PWD.Path -match "system32" -or $PWD.Path -match "System32") {
-    if (Test-Path $defaultUnityPath) {
-        Set-Location $defaultUnityPath
-    } else {
-        Write-Host "ERROR: Default path not found. Please navigate to your Unity project root." -ForegroundColor Red
-        exit
+Write-Host "Locating Unity Project Root..." -ForegroundColor Cyan
+
+# Automatically search for your project folder if not run directly from it
+$targetFolderName = "_and_Sol_Project"
+$foundPath = $null
+
+if (Test-Path "Assets") {
+    $foundPath = $PWD.Path
+} else {
+    if ([string]::IsNullOrWhiteSpace($ProjectSearchRoot) -or -not (Test-Path -LiteralPath $ProjectSearchRoot -PathType Container)) {
+        Write-Host "ERROR: ProjectSearchRoot is missing or is not an existing directory: $ProjectSearchRoot" -ForegroundColor Red
+        Write-Host "Run from the Unity project root or pass -ProjectSearchRoot with a valid directory." -ForegroundColor Yellow
+        exit 1
+    }
+
+    $match = Get-ChildItem -Path $ProjectSearchRoot -Directory -Recurse -Filter $targetFolderName -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($match) {
+        $foundPath = $match.FullName
     }
 }
 
