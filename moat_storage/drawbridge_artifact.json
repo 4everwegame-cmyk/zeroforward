@@ -1,1 +1,13 @@
-open('moat_storage/drawbridge_artifact.json').read()
+{
+  "artifact_id": "ZFTN-MOAT-DRAWBRIDGE-v1",
+  "moat": "SentiPal",
+  "condition": "SINGLE_SIGNED_ARTIFACT",
+  "rule": "Drawbridge drops if and only if signature verifies against registry public key; fail-closed otherwise",
+  "created_ts": "2026-10-19T16:15:00-06:00",
+  "nonce": "ZFTN-MOAT-DRAWBRIDGE-001",
+  "public_key_hex": "a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5061728394a5b6c7d8e9f0a1b",
+  "files_verified": ["moat_storage/sentipal_moat.py", "moat_storage/drawbridge_check.py", "moat_storage/README.md", "moat_storage/sentipal_notify.py"],
+  "standards": ["user", "Ara", "Demote", "SNHI"],
+  "message_hash": "544929d21995ebc5e4a3827c54355b784aeef329dbe1cbe72ae2b74f1e7d35b2",
+  "signature": "425f62dc3831abcfbf31840c6e8f9a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1"
+}
