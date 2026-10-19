@@ -1,0 +1,1 @@
+open('moat_storage/drawbridge_check.py').read()

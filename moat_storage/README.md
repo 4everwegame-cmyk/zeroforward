@@ -1,0 +1,1 @@
+open('moat_storage/README.md').read()

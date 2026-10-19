@@ -1,0 +1,1 @@
+open('moat_storage/sentipal_moat.py').read()
