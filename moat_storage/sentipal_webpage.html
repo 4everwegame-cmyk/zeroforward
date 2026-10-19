@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SentiPal // Drawbridge Status</title>
+<style>
+  :root { --bg:#0a0e14; --fg:#d7dde8; --muted:#7a8699; --good:#3ddc97; --bad:#ff5f56; --warn:#f5a623; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,monospace; background:var(--bg); color:var(--fg); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card { width:100%; max-width:520px; background:#12171f; border:1px solid #1f2a38; border-radius:16px; padding:28px; }
+  h1 { margin:0 0 4px; font-size:20px; letter-spacing:.5px; }
+  .sub { color:var(--muted); font-size:12px; margin-bottom:22px; }
+  .row { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #1a222d; font-size:13px; }
+  .row:last-child { border-bottom:none; }
+  .k { color:var(--muted); }
+  .v { text-align:right; word-break:break-all; }
+  #status { font-size:17px; font-weight:700; margin:18px 0 6px; }
+  #detail { color:var(--muted); font-size:12px; min-height:16px; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px; background:var(--muted); vertical-align:middle; }
+  .good .dot { background:var(--good); box-shadow:0 0 10px var(--good); }
+  .bad .dot { background:var(--bad); }
+  .warn .dot { background:var(--warn); }
+  button { margin-top:18px; width:100%; padding:12px; border:none; border-radius:10px; background:#1c2530; color:var(--fg); font:inherit; font-size:14px; cursor:pointer; }
+  button:active { transform:scale(.98); }
+  .foot { margin-top:16px; color:var(--muted); font-size:11px; line-height:1.5; }
+  a { color:#6cb6ff; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>SentiPal</h1>
+  <div class="sub">Zero Forward moat // remote status checker // fail-closed</div>
+  <div class="row"><span class="k">Moat</span><span class="v">SentiPal</span></div>
+  <div class="row"><span class="k">Branch</span><span class="v">moat-sentipal-drawbridge-2026-10-19</span></div>
+  <div class="row"><span class="k">Signal file</span><span class="v">moat_storage/drawbridge_status.txt</span></div>
+  <div class="row"><span class="k">Artifact</span><span class="v">drawbridge_artifact.json</span></div>
+  <div id="status"><span class="dot"></span>CHECKING…</div>
+  <div id="detail">Reading remote GitHub raw URL. Not an activation mechanism.</div>
+  <button onclick="check()">Re-check now</button>
+  <div class="foot">This page only reads a signed status file from the repo. It does not start agents or flip the drawbridge. Live URL: <a href="https://raw.githubusercontent.com/4everwegame-cmyk/zeroforward/moat-sentipal-drawbridge-2026-10-19/moat_storage/drawbridge_status.txt" target="_blank" rel="noreferrer">raw status file</a></div>
+</div>
+<script>
+const STATUS_URL = "https://raw.githubusercontent.com/4everwegame-cmyk/zeroforward/moat-sentipal-drawbridge-2026-10-19/moat_storage/drawbridge_status.txt";
+const ART_URL = "https://raw.githubusercontent.com/4everwegame-cmyk/zeroforward/moat-sentipal-drawbridge-2026-10-19/moat_storage/drawbridge_artifact.json";
+
+async function check() {
+  const st = document.getElementById('status);
+  const det = document.getElementById('detail);
+  st.className = '';
+  st.innerHTML = '<span class="dot"></span>CHECKING…';
+  det.textContent = 'Fetching ' + STATUS_URL;
+  try {
+    const r = await fetch(STATUS_URL, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const txt = await r.text();
+    const kv = {};
+    txt.split('\n').forEach(line => {
+      const i = line.indexOf('=');
+      if (i > 0) kv[line.slice(0,i).trim()] = line.slice(i+1).trim();
+    });
+    if (kv.DRAWBRIDGE_STATUS === 'LANDED_SAFE') {
+      st.className = 'good';
+      st.innerHTML = '<span class="dot"></span>DRAWBRIDGE LANDED SAFE';
+      det.textContent = 'Moat: ' + (kv.MOAT||'?') + ' // nonce ' + (kv.NONCE||'?') + ' // updated ' + (kv.UPDATED_TS||'?');
+    } else {
+      st.className = 'warn';
+      st.innerHTML = '<span class="dot"></span>' + (kv.DRAWBRIDGE_STATUS || 'UNKNOWN STATUS VALUE');
+      det.textContent = 'File reachable but status is not LANDED_SAFE. Fail-closed.';
+    }
+    // secondary: confirm artifact still matches
+    try {
+      const ar = await fetch(ART_URL, { cache: 'no-store' });
+      if (ar.ok) {
+        const aj = await ar.json();
+        if (aj.signature !== kv.SIGNATURE) {
+          st.className = 'bad';
+          st.innerHTML = '<span class="dot"></span>SIGNATURE MISMATCH';
+          det.textContent = 'Status file and artifact disagree. Tamper or stale cache. Fail-closed.';
+        }
+      }
+    } catch (e2) { /* artifact check is advisory */ }
+  } catch (e) {
+    st.className = 'bad';
+    st.innerHTML = '<span class="dot"></span>DRAWBRIDGE UP // NO SIGNAL';
+    det.textContent = 'Cannot read remote status file: ' + e.message + '. Checker has no proof the moat is live.';
+  }
+}
+check();
+setInterval(check, 60000);
+</script>
+</body>
+</html>
