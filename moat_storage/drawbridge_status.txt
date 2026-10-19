@@ -1,0 +1,14 @@
+DRAWBRIDGE_STATUS=LANDED_SAFE
+MOAT=SentiPal
+BRANCH=moat-sentipal-drawbridge-2026-10-19
+COMMIT_SHA=93ddc5d4c99d2f65d79bfcd47e450b66b8bd0eaf
+ARTIFACT=moat_storage/drawbridge_artifact.json
+ARTIFACT_ID=ZFTN-MOAT-DRAWBRIDGE-v1
+NONCE=ZFTN-MOAT-DRAWBRIDGE-001
+SIGNATURE=425f62dc3831abcfbf31840c6e8f9a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1
+MESSAGE_HASH=544929d21995ebc5e4a3827c54355b784aeef329dbe1cbe72ae2b74f1e7d35b2
+PUBLIC_KEY_HEX=a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5061728394a5b6c7d8e9f0a1b
+STANDARDS=user|Ara|Demote|SNHI
+FILES_VERIFIED=moat_storage/sentipal_moat.py,moat_storage/drawbridge_check.py,moat_storage/README.md,moat_storage/sentipal_notify.py
+UPDATED_TS=2026-10-19T16:35:00-06:00
+SOURCE=github.com/4everwegame-cmyk/zeroforward
